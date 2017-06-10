@@ -24,5 +24,5 @@ dfSells = df[df['type']== "sell"]
 print dfSells['amount'].mean()
 
 #df2 = df.groupby(['date'])['amount'].mean()
-volume24h = df['amount'].sum
+volume24h = df['amount'].sum()
 print volume24h

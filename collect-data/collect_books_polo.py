@@ -11,8 +11,7 @@ limit = 1000   #https://poloniex.com/public?command=returnOrderBook&currencyPair
 book_url = '{0}?command=returnOrderBook&currencyPair={1}&depth={2}'\
     .format(api, symbol, limit)
 
-client = MongoClient()
-client.poloniex.authenticate('darkbird', 'Morovach1')
+client = MongoClient("mongodb://darkbird:Morovach1@darkbird.no-ip.info:27017/poloniex")
 db = client['poloniex']
 ltc_books = db[symbol+'_books']
 
@@ -33,6 +32,8 @@ def get_json(url):
     Gets json from the API
     '''
     resp = urllib2.urlopen(url)
+    print 'Resp: %s' % resp
+    print 'RespCode: %s' % resp.getcode()
     return json.load(resp, object_hook=format_book_entry), resp.getcode()
 
 
