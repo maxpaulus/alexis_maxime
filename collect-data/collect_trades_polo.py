@@ -9,6 +9,7 @@ api = 'https://poloniex.com/public'
 symbol = 'BTC_ETH' #sys.argv[1]
 
 client = MongoClient()
+client.poloniex.authenticate('darkbird', 'Morovach1')
 db = client['poloniex']
 ltc_trades = db[symbol+'_trades']
 

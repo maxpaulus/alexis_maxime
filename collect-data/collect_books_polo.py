@@ -12,6 +12,7 @@ book_url = '{0}?command=returnOrderBook&currencyPair={1}&depth={2}'\
     .format(api, symbol, limit)
 
 client = MongoClient()
+client.poloniex.authenticate('darkbird', 'Morovach1')
 db = client['poloniex']
 ltc_books = db[symbol+'_books']
 
@@ -38,8 +39,11 @@ def get_json(url):
 print 'Running...'
 while True:
     start = time.time()
+    print 'Time: %d' %start
     try:
         book, code = get_json(book_url)
+        print 'Book: %s' %book
+        print 'Code: %s' %code
     except Exception as e:
         print e
         sys.exc_clear()
@@ -50,5 +54,6 @@ while True:
             book['_id'] = time.time()
             ltc_books.insert_one(book)
             time_delta = time.time()-start
+            print 'time delta %d' %time_delta
             if time_delta < 1:
                 time.sleep(1-time_delta)
