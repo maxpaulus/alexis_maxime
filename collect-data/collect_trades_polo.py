@@ -39,22 +39,4 @@ start_timestamp = 1483228800
 end_timestamp = start_timestamp+10000
 while True:
     start = time.time()
-    url = '{0}?command=returnTradeHistory&currencyPair={1}&start={2}&end={3}'\
-        .format(api, symbol, start_timestamp, end_timestamp)
-    try:
-        trades, code = get_json(url)
-    except Exception as e:
-        print e
-        sys.exc_clear()
-    else:
-        if code != 200:
-            print code
-        else:
-            for trade in trades:
-                ltc_trades.update_one({'_id': trade['_id']},
-                                      {'$setOnInsert': trade}, upsert=True)
-            start_timestamp = trades[0]['timestamp'] - 5
-            end_timestamp = start_timestamp+10000
-            time_delta = time.time()-start
-            if time_delta < 0.25: #1.0:
-                time.sleep(0.25-time_delta) #1
+    url = '{0}?command=returnTradeHistory&currencyPair'
