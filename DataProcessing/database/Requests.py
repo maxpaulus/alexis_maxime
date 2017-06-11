@@ -33,7 +33,6 @@ class Requests:
             {"$sort": {"_id": 1}}
         ])
         trades = pd.DataFrame(list(result))
-        trades = trades.set_index('_id')
         return trades
 
 
