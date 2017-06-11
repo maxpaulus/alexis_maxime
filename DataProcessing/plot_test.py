@@ -39,25 +39,12 @@ def modify_doc(doc):
     df = pd.DataFrame(list(trades))
 
     df.index.name = '_id'
-
     source = ColumnDataSource(data=df)
-    print source
 
-    plot = figure(x_axis_type='datetime', y_range=(0.1, 0.13), y_axis_label='Price',
+    plot = figure(x_axis_type='datetime', y_range=(0.06, 0.13), y_axis_label='Price',
                   title="BTC ETH trades")
     plot.line('_id', 'price', source=source)
-
-    def callback(attr, old, new):
-        if new == 0:
-            data = df
-        else:
-            data = df.rolling('{0}D'.format(new)).mean()
-        source.data = ColumnDataSource(data=data).data
-
-    slider = Slider(start=0, end=30, value=0, step=1, title="Smoothing by N Days")
-    slider.on_change('value', callback)
-
-    doc.add_root(column(slider, plot))
+    doc.add_root(column(plot))
 
     doc.theme = Theme(json=yaml.load("""
         attrs:
@@ -74,10 +61,7 @@ def modify_doc(doc):
 
 
 db = client.poloniex
-
-
 io_loop = IOLoop.current()
-
 
 bokeh_app = Application(FunctionHandler(modify_doc))
 
