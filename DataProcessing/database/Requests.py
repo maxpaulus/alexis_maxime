@@ -3,7 +3,7 @@ import pandas as pd
 
 class Requests:
 
-    path = "E:/Documents/Ether Project/db_logins.txt"
+    path = "C:/Users/Allll/PycharmProjects/db_logins.txt"
 
     def __init__(self,dbName):
         with open(self.path, 'r') as content_file:
@@ -47,7 +47,7 @@ class Requests:
 
     def getPricesFromTimeStamp(self, symbol, minTs, maxTs=-1):
         trades_db = self.db[symbol + '_trades']
-        if maxTs == -1:
+        if maxTs != -1:
             result = trades_db.aggregate([
                 {"$match": {"timestamp": {'$gt': minTs, '$lt': maxTs}}},
                 {"$group": {
