@@ -31,6 +31,7 @@ def get_json(url):
     '''
     Gets json from the API
     '''
+    print 'get json...'
     resp = urllib2.urlopen(url)
     print 'Resp: %s' % resp
     print 'RespCode: %s' % resp.getcode()

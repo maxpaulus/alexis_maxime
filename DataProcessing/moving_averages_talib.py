@@ -27,18 +27,19 @@ def modify_doc(doc):
     trades_agg['low'] = trades['low'].groupby(pd.TimeGrouper('5Min')).min()
     trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper('5Min')).agg(lambda x: x.iloc[0])
     trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper('5Min')).sum()
+    trades_agg['date'] = pd.to_datetime(trades_agg._id, unit='s')
+    #trades_agg = trades_agg.set_index('date')
 
     print trades_agg
-    trades_agg = trades_agg.set_index('_id')
+    #trades_agg = trades_agg.set_index('_id')
 
     #trades['date'] = pd.to_datetime(trades.index, format='%Y-%m-%d %H:%M:%S')
     trades_agg['SMA'] = SMA(trades_agg, timeperiod=20)
 
-    trades_agg.index.name = '_id'
     source = ColumnDataSource(data=trades_agg)
     TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 
-    p = figure(x_axis_type="datetime", tools=TOOLS, plot_width=1000, title = "MSFT Candlestick", y_axis_label='Price')
+    p = figure(x_axis_type="datetime", x_axis_label="Date", tools=TOOLS, plot_width=1000, title = "MSFT Candlestick", y_axis_label='Price')
     p.line('_id', 'SMA', source=source)
 
     p.xaxis.major_label_orientation = pi / 4
@@ -48,7 +49,7 @@ def modify_doc(doc):
     dec = trades_agg.open > trades_agg.close
     w = 150
 
-    p.segment(trades_agg.index, trades_agg.high, trades_agg.index, trades_agg.low, color="black")
+    p.segment(trades_agg.date, trades_agg.high, trades_agg.date, trades_agg.low, color="black")
     p.vbar(trades_agg.index[inc], w, trades_agg.open[inc], trades_agg.close[inc], fill_color="#D5E1DD", line_color="black")
     p.vbar(trades_agg.index[dec], w, trades_agg.open[dec], trades_agg.close[dec], fill_color="#F2583E", line_color="black")
 

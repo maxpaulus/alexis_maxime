@@ -3,7 +3,7 @@ import pandas as pd
 
 class Requests:
 
-    path = "C:/Users/Allll/PycharmProjects/db_logins.txt"
+    path = "E:/Documents/Ether Project/db_logins.txt"
 
     def __init__(self,dbName):
         with open(self.path, 'r') as content_file:
