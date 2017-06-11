@@ -11,36 +11,13 @@ from bokeh.models import ColumnDataSource, Slider
 from bokeh.plotting import figure
 from bokeh.server.server import Server
 from bokeh.themes import Theme
+from database.Requests import Requests
 
-client = MongoClient("mongodb://moinolol:bitcoin3000@darkbird.no-ip.info:27017/poloniex")
-db = client.poloniex
 symbol = 'BTC_ETH'
 
-def get_trade_df(symbol, min_ts, max_ts):
-    '''
-    Returns a DataFrame of trades aggregated by second for symbol in time range
-    '''
-    trades_db = db[symbol + '_trades']
-    result = trades_db.aggregate([
-        {"$match": {"timestamp": {'$gt': min_ts, '$lt': max_ts}}},
-        {"$sort": {"timestamp":1}},
-        {"$group": {
-            "_id": "$timestamp",
-            "open": { "$first" :"$rate"},
-            "high": { "$max": "$rate"},
-            "low" : { "$min": "$rate"},
-            "close": { "$last" :"$rate"},
-            "volume": {"$sum": "$amount"},
-            "total_price": {"$sum": {"$multiply": ["$rate", "$amount"]}}
-        }},
-        {"$sort": {"_id": 1}}
-    ])
-    trades = pd.DataFrame(list(result))
-    trades = trades.set_index('_id')
-    return trades
-
 def modify_doc(doc):
-    trades = get_trade_df(symbol, 1497114000, 1497138824)
+    rq = Requests("poloniex")
+    trades = rq.getTrades(symbol, 1497114000, 1497138824)
     trades['SMA'] = SMA(trades, timeperiod=500)
     print trades
 
@@ -77,9 +54,6 @@ def modify_doc(doc):
                 grid_line_dash: [6, 4]
                 grid_line_color: white
     """))
-
-
-
 
 db = client.poloniex
 io_loop = IOLoop.current()
