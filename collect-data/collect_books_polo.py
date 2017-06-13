@@ -32,7 +32,7 @@ def get_json(url):
     Gets json from the API
     '''
     print 'get json...'
-    resp = urllib2.urlopen(url)
+    resp = urllib2.urlopen(url, timeout=10)
     print 'Resp: %s' % resp
     print 'RespCode: %s' % resp.getcode()
     return json.load(resp, object_hook=format_book_entry), resp.getcode()

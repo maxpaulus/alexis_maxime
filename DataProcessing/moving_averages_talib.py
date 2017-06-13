@@ -15,11 +15,7 @@ from database.Requests import Requests
 
 symbol = 'BTC_ETH'
 
-def modify_doc(doc):
-    rq = Requests("poloniex")
-    trades = rq.getTrades(symbol, 1497114000, 1497138824)
-    trades.index = pd.to_datetime(trades._id, unit='s')
-
+def moving_average(trades,timeperiod):
     trades_agg = pd.DataFrame()
     trades_agg['_id'] = trades['_id'].groupby(pd.TimeGrouper('5Min')).min()
     trades_agg['close'] = trades['close'].groupby(pd.TimeGrouper('5Min')).agg(lambda x: x.iloc[-1])
@@ -28,14 +24,18 @@ def modify_doc(doc):
     trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper('5Min')).agg(lambda x: x.iloc[0])
     trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper('5Min')).sum()
     trades_agg['date'] = pd.to_datetime(trades_agg._id, unit='s')
-    #trades_agg = trades_agg.set_index('date')
-
-    print trades_agg
     trades_agg = trades_agg.set_index('_id')
-    print trades_agg
+    trades_agg['SMA'] = SMA(trades_agg, timeperiod=timeperiod)
 
+    return trades_agg
+
+def modify_doc(doc):
+    rq = Requests("poloniex")
+    trades = rq.getTrades(symbol, 1497114000, 1497138824)
+    trades.index = pd.to_datetime(trades._id, unit='s')
+
+    trades_agg = moving_average(trades,20)
     #trades['date'] = pd.to_datetime(trades.index, format='%Y-%m-%d %H:%M:%S')
-    trades_agg['SMA'] = SMA(trades_agg, timeperiod=20)
 
     source = ColumnDataSource(data=trades_agg)
     TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
