@@ -15,18 +15,16 @@ from database.Requests import Requests
 
 symbol = 'BTC_ETH'
 
-def moving_average(trades,timeperiod):
+def aggregate_trades(trades,agg_time):
     trades_agg = pd.DataFrame()
-    trades_agg['_id'] = trades['_id'].groupby(pd.TimeGrouper('5Min')).min()
-    trades_agg['close'] = trades['close'].groupby(pd.TimeGrouper('5Min')).agg(lambda x: x.iloc[-1])
-    trades_agg['high'] = trades['high'].groupby(pd.TimeGrouper('5Min')).max()
-    trades_agg['low'] = trades['low'].groupby(pd.TimeGrouper('5Min')).min()
-    trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper('5Min')).agg(lambda x: x.iloc[0])
-    trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper('5Min')).sum()
+    trades_agg['_id'] = trades['_id'].groupby(pd.TimeGrouper(agg_time)).min()
+    trades_agg['close'] = trades['close'].groupby(pd.TimeGrouper(agg_time)).agg(lambda x: x.iloc[-1])
+    trades_agg['high'] = trades['high'].groupby(pd.TimeGrouper(agg_time)).max()
+    trades_agg['low'] = trades['low'].groupby(pd.TimeGrouper(agg_time)).min()
+    trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper(agg_time)).agg(lambda x: x.iloc[0])
+    trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper(agg_time)).sum()
     trades_agg['date'] = pd.to_datetime(trades_agg._id, unit='s')
     trades_agg = trades_agg.set_index('_id')
-    trades_agg['SMA'] = SMA(trades_agg, timeperiod=timeperiod)
-
     return trades_agg
 
 def modify_doc(doc):
@@ -34,28 +32,34 @@ def modify_doc(doc):
     trades = rq.getTrades(symbol, 1497114000, 1497138824)
     trades.index = pd.to_datetime(trades._id, unit='s')
 
-    trades_agg = moving_average(trades,20)
-    #trades['date'] = pd.to_datetime(trades.index, format='%Y-%m-%d %H:%M:%S')
+    trades_agg = aggregate_trades(trades,'5Min')
+    trades_agg['SMA'] = SMA(trades_agg,20)
+    trades_agg['RSI'] = RSI(trades_agg,20)
+    trades_agg['EMA'] = EMA(trades_agg,20)
 
     source = ColumnDataSource(data=trades_agg)
     TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 
-    p = figure(x_axis_type="datetime", x_axis_label="Date", tools=TOOLS, plot_width=1000, title = "MSFT Candlestick", y_axis_label='Price')
+    p = figure(x_axis_type="datetime", x_axis_label="Date", tools=TOOLS, plot_width=1000, title = "BTC_ETH Candlestick", y_axis_label='Price')
     p.line('_id', 'SMA', source=source)
-
     p.xaxis.major_label_orientation = pi / 4
     p.grid.grid_line_alpha = 0.3
-
     inc = trades_agg.close > trades_agg.open
     dec = trades_agg.open > trades_agg.close
     w = 150
-
     p.segment(trades_agg.index, trades_agg.high, trades_agg.index, trades_agg.low, color="black")
     p.vbar(trades_agg.index[inc], w, trades_agg.open[inc], trades_agg.close[inc], fill_color="#D5E1DD", line_color="black")
     p.vbar(trades_agg.index[dec], w, trades_agg.open[dec], trades_agg.close[dec], fill_color="#F2583E", line_color="black")
 
+    p_rsi = figure(x_axis_type="datetime", x_axis_label="Date", tools=TOOLS, plot_width=1000, title = "RSI", y_axis_label='RSI',y_range=(0, 100))
+    p_rsi.line('_id', 'RSI', source=source)
+
+    p_ema = figure(x_axis_type="datetime", x_axis_label="Date", tools=TOOLS, plot_width=1000, title = "EMA", y_axis_label='EMA')
+    p_ema.line('_id', 'EMA', source=source)
 
     doc.add_root(column(p))
+    doc.add_root(column(p_rsi))
+    doc.add_root(column(p_ema))
 
     doc.theme = Theme(json=yaml.load("""
         attrs:
