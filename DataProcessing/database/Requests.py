@@ -77,4 +77,10 @@ class Requests:
         trades = pd.DataFrame(list(result))
         return trades
 
-
+    def setAggregatedTrades(self,symbol, agg_time, trades_agg):
+        db = self.db[symbol + 'grouped_trades_' + agg_time]
+        print trades_agg
+        for grouped_trades in trades_agg:
+            print grouped_trades
+            db.update_one({'_id': grouped_trades['_id']},
+                                  {'$setOnInsert': grouped_trades}, upsert=True)

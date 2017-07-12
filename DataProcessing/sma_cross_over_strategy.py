@@ -29,13 +29,16 @@ def aggregate_trades(trades, agg_time):
 
 
 rq = Requests("poloniex")
-trades = rq.getTrades(symbol, 1497114000, 1497138824)
+start_ts = 1491004800
+agg_time = '5Min'
+
+trades = rq.getTrades(symbol, start_ts, start_ts + 86400)
 trades.index = pd.to_datetime(trades._id, unit='s')
+trades_agg = aggregate_trades(trades, agg_time)
 
-trades_agg = aggregate_trades(trades, '30Min')
+rq.setAggregatedTrades(symbol, agg_time, trades_agg)
 
-bottom = 100000000
-top = 0
+trades_agg['SMA_50'] = SMA(trades_agg, 50)
+trades_agg['EMA_20'] = EMA(trades_agg, 20)
 
-for x in trades_agg:
-    if trades_agg['low'] < bottom &&
+print trades_agg
