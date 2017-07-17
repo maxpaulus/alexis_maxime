@@ -12,6 +12,7 @@ from bokeh.plotting import figure
 from bokeh.server.server import Server
 from bokeh.themes import Theme
 from database.Requests import Requests
+import json
 
 symbol = 'BTC_ETH'
 
@@ -23,8 +24,6 @@ def aggregate_trades(trades, agg_time):
     trades_agg['low'] = trades['low'].groupby(pd.TimeGrouper(agg_time)).min()
     trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper(agg_time)).agg(lambda x: x.iloc[0])
     trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper(agg_time)).sum()
-    trades_agg['date'] = pd.to_datetime(trades_agg._id, unit='s')
-    trades_agg = trades_agg.set_index('_id')
     return trades_agg
 
 
@@ -36,9 +35,10 @@ trades = rq.getTrades(symbol, start_ts, start_ts + 86400)
 trades.index = pd.to_datetime(trades._id, unit='s')
 trades_agg = aggregate_trades(trades, agg_time)
 
-rq.setAggregatedTrades(symbol, agg_time, trades_agg)
 
 trades_agg['SMA_50'] = SMA(trades_agg, 50)
 trades_agg['EMA_20'] = EMA(trades_agg, 20)
+
+rq.setAggregatedTrades(symbol, agg_time, trades_agg)
 
 print trades_agg
