@@ -18,10 +18,10 @@ symbol = 'BTC_ETH'
 def aggregate_trades(trades,agg_time):
     trades_agg = pd.DataFrame()
     trades_agg['_id'] = trades['_id'].groupby(pd.TimeGrouper(agg_time)).min()
-    trades_agg['close'] = trades['close'].groupby(pd.TimeGrouper(agg_time)).agg(lambda x: x.iloc[-1])
+    trades_agg['close'] = trades['close'].groupby(pd.TimeGrouper(agg_time)).nth(-1)
     trades_agg['high'] = trades['high'].groupby(pd.TimeGrouper(agg_time)).max()
     trades_agg['low'] = trades['low'].groupby(pd.TimeGrouper(agg_time)).min()
-    trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper(agg_time)).agg(lambda x: x.iloc[0])
+    trades_agg['open'] = trades['open'].groupby(pd.TimeGrouper(agg_time)).nth(0)
     trades_agg['volume'] = trades['volume'].groupby(pd.TimeGrouper(agg_time)).sum()
     trades_agg['date'] = pd.to_datetime(trades_agg._id, unit='s')
     trades_agg = trades_agg.set_index('_id')
