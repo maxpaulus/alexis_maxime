@@ -1,18 +1,5 @@
 import pandas as pd
-import yaml
-import math
-from math import pi
-from tornado.ioloop import IOLoop
-from talib.abstract import *
-from bokeh.application.handlers import FunctionHandler
-from bokeh.application import Application
-from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Slider
-from bokeh.plotting import figure
-from bokeh.server.server import Server
-from bokeh.themes import Theme
 from database.Requests import Requests
-import json
 
 symbol = 'BTC_ETH'
 
@@ -39,7 +26,3 @@ while start_ts < 1497136768:
 
     rq.setAggregatedTrades(symbol, agg_time, trades_agg)
     start_ts = start_ts + 86400
-
-#trades_agg['SMA_50'] = SMA(trades_agg, 50)
-#trades_agg['EMA_20'] = EMA(trades_agg, 20)
-#print trades_agg

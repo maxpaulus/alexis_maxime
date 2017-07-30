@@ -84,4 +84,13 @@ class Requests:
         for grouped_trade in records:
             print grouped_trade
             db.update_one({'_id': grouped_trade['_id']},
-                                  {'$setOnInsert': grouped_trade}, upsert=True)
+                                  {'$set': grouped_trade}, upsert=True)
+
+    def getAggregatedTrades(self, symbol, minTs, maxTs, agg_time):
+        '''
+        Returns a DataFrame of trades aggregated by 5 mins for symbol in time range
+        '''
+        aggregated_trades_db = self.db[symbol + '_grouped_trades_' + agg_time]
+        result = aggregated_trades_db.find({ "_id": {"$gte":minTs, "$lt": maxTs}})
+        trades = pd.DataFrame(list(result))
+        return trades
