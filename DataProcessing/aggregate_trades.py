@@ -15,7 +15,7 @@ def aggregate_trades(trades, agg_time):
 
 
 rq = Requests("poloniex")
-start_ts = 1491004800
+start_ts = 1497136500
 agg_time = '5Min'
 
 while start_ts < 1497136768:

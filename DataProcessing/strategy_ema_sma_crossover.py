@@ -18,7 +18,7 @@ symbol = 'BTC_ETH'
 rq = Requests("poloniex")
 agg_time = '5Min'
 minTs = 1491032712
-maxTs = minTs + 2592000
+maxTs = minTs + 20592000
 trades_agg = rq.getAggregatedTrades(symbol, minTs, maxTs, agg_time)
 trades_agg.index = pd.to_datetime(trades_agg._id, unit='s')
 
@@ -31,7 +31,7 @@ else:
     context = "sold"
 
 for  index, trade in trades_agg[1:].iterrows():
-    if context == "bought" and trade['EMA_20'] < trade['SMA_50']:
+    if context == "bought" and trade['EMA_20'] < trade['SMA_50'] and (trade['close']-buy_price)/trade['close'] > 0.05:
         context = "sold"
         print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
     if context == "sold" and trade['EMA_20'] > trade['SMA_50']:

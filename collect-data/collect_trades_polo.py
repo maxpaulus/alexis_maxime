@@ -30,22 +30,24 @@ def get_json(url):
     '''
     Gets json from the API
     '''
-    resp = urllib2.urlopen(url)
+    print 'get json...'
+    resp = urllib2.urlopen(url, timeout=10)
+    print 'Resp: %s' % resp
+    print 'RespCode: %s' % resp.getcode()
     return json.load(resp, object_hook=format_trade), resp.getcode()
 
 
 print 'Running...'
-start_timestamp = 1496676263
+start_timestamp = 1497402383
 end_timestamp = start_timestamp+10000
 while True:
     start = time.time()
-    print 'start: %d' %start
+    print 'Time: %d' %start
     url = '{0}?command=returnTradeHistory&currencyPair={1}&start={2}&end={3}' \
         .format(api, symbol, start_timestamp, end_timestamp)
     try:
-        print 'debut try'
         trades, code = get_json(url)
-        print 'fin try'
+        print 'Code: %s' %code
     except Exception as e:
         print e
         sys.exc_clear()
@@ -59,7 +61,8 @@ while True:
                                       {'$setOnInsert': trade}, upsert=True)
             start_timestamp = trades[0]['timestamp'] - 5
             end_timestamp = start_timestamp + 10000
-            print 'start_timestamp: %d' %start_timestamp
+            print 'new_start_timestamp %d' %start_timestamp
+            print 'new_end_timestamp %d' %end_timestamp
             time_delta = time.time() - start
             if time_delta < 0.25:  # 1.0:
                 time.sleep(0.25 - time_delta)  # 1
