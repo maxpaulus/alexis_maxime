@@ -38,7 +38,7 @@ def get_json(url):
 
 
 print 'Running...'
-start_timestamp = 1497402383
+start_timestamp = 1501709220 #1497402383
 end_timestamp = start_timestamp+10000
 while True:
     start = time.time()

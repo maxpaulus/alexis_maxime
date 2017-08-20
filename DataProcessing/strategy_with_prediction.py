@@ -21,47 +21,38 @@ minTs = 1483228800
 maxTs = 1503157317 #minTs + 20592000
 trades_agg = rq.getAggregatedTrades(symbol, minTs, maxTs, agg_time)
 trades_agg.index = pd.to_datetime(trades_agg._id, unit='s')
+risk_reward = 4
 position_btc = 1 #BTC
 position_eth = 0
+prediction = ["buy",0.11] # [Décision, confidence]
+
 fees = 0.0025
 
-ema_20_init = trades_agg['EMA_20'][0]
-sma_50_init = trades_agg['SMA_50'][0]
+context = "sold"
 first_price =  trades_agg['close'][0]
 number_of_trades = 0
 fees_paid = 0
 
-if ema_20_init > sma_50_init:
-    context = "bought"
-else:
-    context = "sold"
-
 for  index, trade in trades_agg[1:].iterrows():
     #Basic strategy
-    if context == "bought" and trade['EMA_20'] < trade['SMA_50'] and (trade['close']-buy_price)/trade['close'] > 0.6: #only sell if profits greater than 5%
-        context = "sold"
-        position_btc = position_eth * (1-fees) * trade['close']
-        fees_paid = fees_paid + position_eth * fees * trade['close']
-        position_eth = 0
-        number_of_trades = number_of_trades+1
-        print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
-    if context == "sold" and trade['EMA_20'] > trade['SMA_50']:
-        context = "bought"
-        position_eth = position_btc * (1-fees)/ trade['close']
-        fees_paid = fees_paid + position_btc * fees
-        position_btc = 0
-        buy_price = trade['close']
-        number_of_trades = number_of_trades+1
-        print "%s buy %f" %(index,trade['close'])
-
-    #stop loss
-    if context == "bought" and (trade['close'] - buy_price) / trade['close'] < -0.05:
-        context = "sold"
-        position_btc = position_eth * (1 - fees) * trade['close']
-        fees_paid = fees_paid + position_eth * fees * trade['close']
-        position_eth = 0
-        number_of_trades = number_of_trades+1
-        print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
+    if context == "sold":
+        if prediction[0] == "buy" and prediction[1] > (1-1/risk_reward):
+            #BUY
+            context = "bought"
+            position_eth = position_btc * (1 - fees) / trade['close']
+            fees_paid = fees_paid + position_btc * fees
+            position_btc = 0
+            buy_price = trade['close']
+            number_of_trades = number_of_trades + 1
+    if context == "bought":
+        if prediction[0] == "sell" and prediction[1] > (1-1/risk_reward):
+            #SELL
+            context = "sold"
+            position_btc = position_eth * (1 - fees) * trade['close']
+            fees_paid = fees_paid + position_eth * fees * trade['close']
+            position_eth = 0
+            number_of_trades = number_of_trades + 1
+            print "%s sell %f, profit: %f" % (index, trade['close'], trade['close'] - buy_price)
     last_price = trade['close']
 
 print ""

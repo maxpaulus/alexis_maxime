@@ -15,10 +15,10 @@ def aggregate_trades(trades, agg_time):
 
 
 rq = Requests("poloniex")
-start_ts = 1497136500
+start_ts = 1501613703
 agg_time = '5Min'
 
-while start_ts < 1497136768:
+while start_ts < 1503157317:
     print start_ts
     trades = rq.getTrades(symbol, start_ts, start_ts + 86400)
     trades.index = pd.to_datetime(trades._id, unit='s')
