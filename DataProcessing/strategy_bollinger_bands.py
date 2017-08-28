@@ -17,7 +17,7 @@ import json
 symbol = 'BTC_ETH'
 rq = Requests("poloniex")
 agg_time = '5Min'
-minTs = 1483228800
+minTs = 1493251200
 maxTs = 1503157317 #minTs + 20592000
 trades_agg = rq.getAggregatedTrades(symbol, minTs, maxTs, agg_time)
 trades_agg.index = pd.to_datetime(trades_agg._id, unit='s')
@@ -25,48 +25,59 @@ position_btc = 1 #BTC
 position_eth = 0
 fees = 0.0025
 
-ema_20_init = trades_agg['EMA_20'][0]
-sma_50_init = trades_agg['SMA_50'][0]
 first_price =  trades_agg['close'][0]
 number_of_trades = 0
 fees_paid = 0
-
-if ema_20_init > sma_50_init:
-    context = "bought"
-else:
-    context = "sold"
+cross_over = 0
+good_trades = 0
+stop_loss_count = 0
+#todo: create function to test risk_reward & base_stop_loss adjustments
+risk_reward = 6
+base_stop_loss = 0.03
+context = "sold"
 
 for  index, trade in trades_agg[1:].iterrows():
     #Basic strategy
-    if context == "bought" and trade['EMA_20'] < trade['SMA_50'] and (trade['close']-buy_price)/trade['close'] > 0.6: #only sell if profits greater than 5%
-        context = "sold"
-        position_btc = position_eth * (1-fees) * trade['close']
-        fees_paid = fees_paid + position_eth * fees * trade['close']
-        position_eth = 0
-        number_of_trades = number_of_trades+1
-        print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
-    if context == "sold" and trade['EMA_20'] > trade['SMA_50']:
-        context = "bought"
-        position_eth = position_btc * (1-fees)/ trade['close']
-        fees_paid = fees_paid + position_btc * fees
-        position_btc = 0
-        buy_price = trade['close']
-        number_of_trades = number_of_trades+1
-        print "%s buy %f" %(index,trade['close'])
+    if context == "bought":
+        if trade['EMA_20'] > trade['SMA_50']:
+            cross_over = 1
+        if trade['EMA_20'] < trade['SMA_50'] and cross_over == 1 and (trade['close']-buy_price)/trade['close'] > base_stop_loss*risk_reward: #only sell if profits greater than 5%
+            context = "sold"
+            position_btc = position_eth * (1-fees) * trade['close']
+            fees_paid = fees_paid + position_eth * fees * trade['close']
+            position_eth = 0
+            cross_over = 0
+            if trade['close']-buy_price > 0:
+                good_trades = good_trades + 1
+            print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
+        if (trade['close'] - buy_price) / trade['close'] < -0.02: #stop loss
+            context = "sold"
+            position_btc = position_eth * (1 - fees) * trade['close']
+            fees_paid = fees_paid + position_eth * fees * trade['close']
+            position_eth = 0
+            stop_loss_count = stop_loss_count +1
+            if trade['close']-buy_price > 0:
+                good_trades = good_trades + 1
+            print "stop loss!"
+            print "%s sell %f, profit: %f" % (index, trade['close'], trade['close'] - buy_price)
+    if context == "sold":
+        if trade['close'] < trade['LOWER_BOLLINGER_BAND']:
+            context = "bought"
+            position_eth = position_btc * (1-fees)/ trade['close']
+            fees_paid = fees_paid + position_btc * fees
+            position_btc = 0
+            buy_price = trade['close']
+            number_of_trades = number_of_trades+1
+            print "%s buy %f" %(index,trade['close'])
 
-    #stop loss
-    if context == "bought" and (trade['close'] - buy_price) / trade['close'] < -0.05:
-        context = "sold"
-        position_btc = position_eth * (1 - fees) * trade['close']
-        fees_paid = fees_paid + position_eth * fees * trade['close']
-        position_eth = 0
-        number_of_trades = number_of_trades+1
-        print "%s sell %f, profit: %f" %(index,trade['close'],trade['close']-buy_price)
     last_price = trade['close']
 
 print ""
 print "%s total fees paid: %f BTC" %(index,fees_paid)
 print "%s number of trades: %d" %(index,number_of_trades)
+print "%s accuracy: %f" %(index,good_trades / number_of_trades)
+print "%s stop loss count: %d" %(index,stop_loss_count)
+print "%s good_trades: %f" %(index,good_trades)
 print "%s final balance %f BTC, %f BTC in ETH" %(index,position_btc,position_eth*last_price)
 print "%s market comparison: %f BTC" %(index,1*(1-fees) / first_price * (1-fees) * last_price)
 
